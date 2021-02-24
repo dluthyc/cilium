@@ -468,23 +468,18 @@ func (a *L3n4Addr) StringID() string {
 	return a.String()
 }
 
-// Hash calculates a unique string of the L3n4Addr e.g for use as a key in maps
+// Hash calculates a unique string of the L3n4Addr e.g for use as a key in maps.
+// Note: the resulting string meant to be used as a key for maps and is not
+// readable by a human eye when printed out.
 func (a L3n4Addr) Hash() string {
-	const lenIPv4 = 15
 	const lenProto = 1
 	const lenPort = 6
 	const lenScope = 2
 
-	// Note: This capacity will not be enough for long IPv6 addresses, but it
-	// is cheaper to reallocate on overflow than to check the length of a.IP
-	b := make([]byte, 0, lenIPv4+lenProto+lenPort+lenScope)
-
-	b = append(b, a.IP.String()...)
-	b = append(b, '|')
+	b := make([]byte, net.IPv6len, net.IPv6len+lenProto+lenPort+lenScope)
+	copy(b, a.IP.To16())
 	// FIXME: Remove Protocol's omission once we care about protocols.
-	b = append(b, '|')
 	b = strconv.AppendUint(b, uint64(a.Port), 10)
-	b = append(b, '|')
 	b = strconv.AppendUint(b, uint64(a.Scope), 10)
 
 	return string(b)
